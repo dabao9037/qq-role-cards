@@ -143,7 +143,10 @@ store.reset(cardId, qq);
 
 ## 11. 当前实现状态
 
-桥接 `qqbot-dsh-stack` 已接：
+桥接 `qqbot-dsh-stack` 已接，并已在 207 线上启用（`roleCards.enabled=true`，主人私聊已绑定 `shenyouchu`）：
+
+- 生效范围：`reserved2` 或 `closed-agent` 的**私聊**；群聊不进入角色卡
+- `closed-agent` 下直接注入卡本体，并沿用原有自动发送；回复概率、+0.2 和门禁同样生效
 
 - `qq-bridge` 的卡片绑定、回复概率、唤醒注入、表情/语音门禁、好感增长
 - 每 20 分钟独立 DSH 会话的静默后台时间线（只写 `backgroundLog`，不加好感、不发 QQ 消息）
@@ -155,6 +158,7 @@ store.reset(cardId, qq);
 
 - 真实照片生成与语音克隆；当前只有门禁和已有语音库发送
 - `assets/portrait.png` 等卡形象素材
-- 卡仓库到桥接 `role-cards/cards/` 的自动同步脚本
+- 卡仓库到桥接 `role-cards/cards/` 的自动同步脚本（当前是人工复制）
+- 20 分钟后台时间线线上首次运行（调度已启动，尚待首个 20 分钟窗口观察）
 
 在这些接完前，角色卡模式只在 `roleCards.enabled=true` 且显式绑定私聊 QQ 时生效；默认关闭，不影响原来的普通模式。
