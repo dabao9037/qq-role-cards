@@ -1,0 +1,8 @@
+node_modules/
+.DS_Store
+*.log
+
+# 运行时生成物，不进仓库
+runtime/
+dist/
+*.tmp

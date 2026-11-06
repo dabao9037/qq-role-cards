@@ -1,0 +1,11 @@
+{
+  "name": "qq-role-cards",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "角色卡仓库：人设、行为、好感度与运行配置",
+  "scripts": {
+    "validate": "node scripts/validate-cards.mjs",
+    "test": "node --test test/*.test.js && node scripts/validate-cards.mjs"
+  }
+}

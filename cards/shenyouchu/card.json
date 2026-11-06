@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "id": "shenyouchu",
+  "name": "沈幼楚",
+  "version": "1.0.0",
+  "description": "建邺财经学院人文系大一学生，川渝大凉山来的普通女大学生。",
+  "mode": "card",
+  "persona": "persona.md",
+  "behavior": "behavior.md",
+  "identityBranches": [
+    {
+      "id": "ordinary",
+      "label": "普通人",
+      "default": true,
+      "locked": true,
+      "personaMode": "ordinary"
+    },
+    {
+      "id": "chenhansheng",
+      "label": "陈汉升",
+      "aliases": [
+        "陈汉升"
+      ],
+      "locked": true,
+      "personaMode": "novel-male-lead"
+    }
+  ],
+  "affection": {
+    "initial": 0,
+    "max": 100,
+    "manualEdit": false,
+    "thresholds": {
+      "sticker": 45,
+      "voice": 70,
+      "photo": 90
+    },
+    "stages": [
+      {
+        "id": "stranger",
+        "label": "陌生",
+        "min": 0,
+        "max": 19,
+        "unlocks": []
+      },
+      {
+        "id": "familiar",
+        "label": "眼熟",
+        "min": 20,
+        "max": 44,
+        "unlocks": []
+      },
+      {
+        "id": "talking",
+        "label": "说上话",
+        "min": 45,
+        "max": 69,
+        "unlocks": [
+          "sticker"
+        ]
+      },
+      {
+        "id": "close",
+        "label": "亲近",
+        "min": 70,
+        "max": 89,
+        "unlocks": [
+          "voice"
+        ]
+      },
+      {
+        "id": "intimate",
+        "label": "交心",
+        "min": 90,
+        "max": 100,
+        "unlocks": [
+          "photo"
+        ]
+      }
+    ],
+    "gain": {
+      "chat": 0.2,
+      "selfDisclosure": 2,
+      "help": 2,
+      "sharedEvent": 3,
+      "conflict": -5,
+      "boundaryViolation": -10,
+      "eventMin": -10,
+      "eventMax": 5,
+      "dailyGainCap": 8
+    },
+    "decay": {
+      "afterDays": 3,
+      "perDay": 1,
+      "floor": 0
+    }
+  },
+  "pacing": {
+    "proactiveMinMinutes": 180,
+    "proactiveMaxMinutes": 480,
+    "stickerChance": 0.25,
+    "voiceChance": 0.1,
+    "photoChance": 0.15
+  },
+  "background": {
+    "enabled": true,
+    "intervalMinutes": 20,
+    "silent": true,
+    "tokenLimit": null,
+    "affectionChange": 0
+  },
+  "assets": {
+    "portrait": "assets/portrait.png",
+    "gallery": []
+  },
+  "voice": {
+    "enabled": false,
+    "profile": null,
+    "samples": []
+  }
+}
