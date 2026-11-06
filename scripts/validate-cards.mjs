@@ -70,6 +70,71 @@ function checkStages(cardId, a) {
   }
 }
 
+
+function checkResponseChance(cardId, a) {
+  const ranges = a.responseChance?.ranges;
+  if (!Array.isArray(ranges) || !ranges.length) {
+    fail(cardId, 'affection.responseChance.ranges 不能为空');
+    return;
+  }
+  const sorted = [...ranges].sort((x, y) => x.min - y.min);
+  if (sorted[0].min !== 0) fail(cardId, 'replyChance 必须从 0 开始');
+  if (sorted.at(-1).max !== a.max) fail(cardId, `replyChance 必须覆盖到 ${a.max}`);
+  for (let i = 0; i < sorted.length; i++) {
+    const r = sorted[i];
+    if (!isFiniteNumber(r.min) || !isFiniteNumber(r.max) || r.min > r.max) {
+      fail(cardId, `replyChance 区间不合法：${JSON.stringify(r)}`);
+      continue;
+    }
+    if (i > 0 && r.min !== sorted[i - 1].max + 1) {
+      fail(cardId, `replyChance 区间不连续：${sorted[i - 1].max} 后是 ${r.min}`);
+    }
+    const hasSingle = isFiniteNumber(r.chance);
+    const hasLine = isFiniteNumber(r.start) && isFiniteNumber(r.end);
+    if (!hasSingle && !hasLine) fail(cardId, `replyChance 区间缺少 chance 或 start/end：${r.min}-${r.max}`);
+    for (const v of [r.chance, r.start, r.end].filter(isFiniteNumber)) {
+      if (v < 0 || v > 1) fail(cardId, `replyChance 概率越界：${v}`);
+    }
+    if (hasLine && r.start > r.end) fail(cardId, `replyChance 线性区间 start 大于 end：${r.min}-${r.max}`);
+  }
+}
+
+function checkProactive(cardId, p) {
+  const proactive = p.proactive;
+  if (!proactive || typeof proactive !== 'object') {
+    fail(cardId, 'pacing.proactive 缺失');
+    return;
+  }
+  if (proactive.enabled !== true) fail(cardId, 'pacing.proactive.enabled 必须为 true');
+  if (!isFiniteNumber(proactive.minAffection)) fail(cardId, 'pacing.proactive.minAffection 不是数字');
+  if (!isFiniteNumber(proactive.skipIfUserActiveWithinMinutes) || proactive.skipIfUserActiveWithinMinutes < 0) {
+    fail(cardId, 'pacing.proactive.skipIfUserActiveWithinMinutes 必须是非负数字');
+  }
+  if (proactive.skipIfPreviousUnanswered !== true) fail(cardId, 'pacing.proactive.skipIfPreviousUnanswered 必须为 true');
+  const quiet = proactive.quietHours ?? {};
+  const time = /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (!time.test(quiet.start) || !time.test(quiet.end)) fail(cardId, 'pacing.proactive.quietHours 时间格式必须是 HH:MM');
+  const intervals = proactive.intervals;
+  if (!Array.isArray(intervals) || !intervals.length) {
+    fail(cardId, 'pacing.proactive.intervals 不能为空');
+    return;
+  }
+  const sorted = [...intervals].sort((x, y) => x.min - y.min);
+  if (sorted[0].min !== proactive.minAffection) {
+    fail(cardId, `proactive 第一个区间必须从 minAffection=${proactive.minAffection} 开始`);
+  }
+  if (sorted.at(-1).max !== 100) fail(cardId, 'proactive 最后一个区间必须到 100');
+  for (let i = 0; i < sorted.length; i++) {
+    const r = sorted[i];
+    if (!isFiniteNumber(r.minMinutes) || !isFiniteNumber(r.maxMinutes) || r.minMinutes < 1 || r.minMinutes > r.maxMinutes) {
+      fail(cardId, `proactive 区间 ${r.min}-${r.max} 的分钟数不合法`);
+    }
+    if (i > 0 && r.min !== sorted[i - 1].max + 1) {
+      fail(cardId, `proactive 区间不连续：${sorted[i - 1].max} 后是 ${r.min}`);
+    }
+  }
+}
+
 function checkCard(cardDir) {
   const cardId = path.basename(cardDir);
   const cardPath = path.join(cardDir, 'card.json');
@@ -121,6 +186,7 @@ function checkCard(cardDir) {
     if (a.manualEdit !== false) fail(cardId, 'affection.manualEdit 必须为 false');
     checkThresholds(cardId, a);
     checkStages(cardId, a);
+    checkResponseChance(cardId, a);
     const g = a.gain ?? {};
     for (const key of ['chat', 'selfDisclosure', 'help', 'sharedEvent', 'conflict', 'boundaryViolation', 'eventMin', 'eventMax', 'dailyGainCap']) {
       if (!isFiniteNumber(g[key])) fail(cardId, `affection.gain.${key} 不是数字`);
@@ -139,11 +205,7 @@ function checkCard(cardDir) {
   }
 
   const p = card.pacing ?? {};
-  if (!isFiniteNumber(p.proactiveMinMinutes) || !isFiniteNumber(p.proactiveMaxMinutes)) {
-    fail(cardId, 'pacing 主动间隔必须是数字');
-  } else if (p.proactiveMinMinutes > p.proactiveMaxMinutes) {
-    fail(cardId, 'pacing.proactiveMinMinutes 不能大于 proactiveMaxMinutes');
-  }
+  checkProactive(cardId, p);
   for (const key of ['stickerChance', 'voiceChance', 'photoChance']) {
     if (!isFiniteNumber(p[key]) || p[key] < 0 || p[key] > 1) fail(cardId, `pacing.${key} 必须在 0..1`);
   }

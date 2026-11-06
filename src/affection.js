@@ -146,6 +146,87 @@ export function resetAffectionState(card, { qq, identityId = 'ordinary', now = n
   return createAffectionState(card, { qq, identityId, now });
 }
 
+
+export function getReplyChance(card, value) {
+  assertCard(card);
+  const ranges = card.affection.responseChance?.ranges;
+  if (!Array.isArray(ranges) || !ranges.length) return 1;
+  const sorted = [...ranges].sort((a, b) => a.min - b.min);
+  const range = sorted.find((r) => value >= r.min && value <= r.max);
+  if (!range) return value < sorted[0].min ? 0 : 1;
+  if (Number.isFinite(range.chance)) return round2(range.chance);
+  const span = Math.max(1, range.max - range.min);
+  const ratio = (value - range.min) / span;
+  return round2(range.start + (range.end - range.start) * ratio);
+}
+
+export function shouldReply(card, state, { random = Math.random } = {}) {
+  return random() < getReplyChance(card, state.value);
+}
+
+export function getProactiveInterval(card, value) {
+  const proactive = card.pacing?.proactive;
+  if (!proactive?.enabled || value < proactive.minAffection) return null;
+  const ranges = proactive.intervals ?? [];
+  const range = [...ranges].sort((a, b) => a.min - b.min).find((r) => value >= r.min && value <= r.max);
+  return range ? { minMinutes: range.minMinutes, maxMinutes: range.maxMinutes } : null;
+}
+
+function minutesInTimeZone(now, timeZone = 'Asia/Shanghai') {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(now);
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
+  const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
+  return hour * 60 + minute;
+}
+
+export function isQuietHours(card, now = new Date()) {
+  const quiet = card.pacing?.proactive?.quietHours;
+  if (!quiet?.start || !quiet?.end) return false;
+  const [startH, startM] = quiet.start.split(':').map(Number);
+  const [endH, endM] = quiet.end.split(':').map(Number);
+  const start = startH * 60 + startM;
+  const end = endH * 60 + endM;
+  const current = minutesInTimeZone(now, quiet.timeZone ?? 'Asia/Shanghai');
+  if (start === end) return false;
+  return start < end ? current >= start && current < end : current >= start || current < end;
+}
+
+export function getProactivePlan(
+  card,
+  state,
+  { now = new Date(), lastUserMessageAt = null, lastProactiveAt = null, lastProactiveAnswered = true, random = Math.random } = {}
+) {
+  const proactive = card.pacing?.proactive;
+  if (!proactive?.enabled || state.value < proactive.minAffection) {
+    return { eligible: false, reason: 'below-threshold' };
+  }
+  if (lastUserMessageAt) {
+    const idleMinutes = (new Date(now).getTime() - new Date(lastUserMessageAt).getTime()) / 60000;
+    if (idleMinutes < proactive.skipIfUserActiveWithinMinutes) {
+      return { eligible: false, reason: 'user-active' };
+    }
+  }
+  if (lastProactiveAt && lastProactiveAnswered === false && proactive.skipIfPreviousUnanswered) {
+    return { eligible: false, reason: 'previous-unanswered' };
+  }
+  if (isQuietHours(card, now)) {
+    return { eligible: false, reason: 'quiet-hours' };
+  }
+  const interval = getProactiveInterval(card, state.value);
+  if (!interval) return { eligible: false, reason: 'no-interval' };
+  const span = interval.maxMinutes - interval.minMinutes;
+  const minutes = interval.minMinutes + Math.floor(random() * (span + 1));
+  return {
+    eligible: true,
+    interval,
+    nextAt: new Date(new Date(now).getTime() + minutes * 60000).toISOString()
+  };
+}
 /**
  * 给模型看的摘要：只有阶段和允许的能力，不含数值，避免用户套话。
  */

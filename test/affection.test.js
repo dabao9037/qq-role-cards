@@ -8,9 +8,13 @@ import {
   applyEvent,
   applyDecay,
   canUse,
+  getProactiveInterval,
+  getProactivePlan,
+  getReplyChance,
   getStage,
   getUnlocks,
   resetAffectionState,
+  shouldReply,
   toPromptSummary
 } from '../src/affection.js';
 
@@ -22,34 +26,34 @@ function withValue(state, value) {
   return { ...state, value };
 }
 
-test('初始好感为 0，按卡和 QQ 隔离', () => {
+test('初始好感为 20，按卡和 QQ 隔离', () => {
   const a = createAffectionState(card, { qq: '10001', now: T0 });
   const b = createAffectionState(card, { qq: '10002', now: T0 });
-  assert.equal(a.value, 0);
+  assert.equal(a.value, 20);
   assert.equal(a.cardId, 'shenyouchu');
   assert.notEqual(a.qq, b.qq);
 });
 
-test('聊天加 0.2，单日上限 8', () => {
+test('聊天加 0.2，单日上限 5', () => {
   let s = createAffectionState(card, { qq: '10001', now: T0 });
   for (let i = 0; i < 100; i++) s = applyEvent(card, s, 'chat', { now: T0 });
-  assert.equal(s.value, 8);
-  assert.equal(s.dailyGained, 8);
+  assert.equal(s.value, 25);
+  assert.equal(s.dailyGained, 5);
 });
 
 test('跨天后单日额度重置', () => {
   let s = createAffectionState(card, { qq: '10001', now: T0 });
   for (let i = 0; i < 100; i++) s = applyEvent(card, s, 'chat', { now: T0 });
   s = applyEvent(card, s, 'chat', { now: day(1) });
-  assert.equal(s.value, 8.2);
+  assert.equal(s.value, 25.2);
 });
 
 test('单次事件截断到 -10 ~ +5', () => {
   let s = createAffectionState(card, { qq: '10001', now: T0 });
   s = applyEvent(card, s, 'boundaryViolation', { now: T0, amount: -999 });
-  assert.equal(s.value, 0);
+  assert.equal(s.value, 10);
   s = applyEvent(card, s, 'sharedEvent', { now: T0, amount: 999 });
-  assert.equal(s.value, 5);
+  assert.equal(s.value, 15);
 });
 
 test('阶段与解锁按阈值生效', () => {
@@ -116,4 +120,67 @@ test('身份线不改变好感数值', () => {
   b = applyEvent(card, b, 'selfDisclosure', { now: T0 });
   assert.equal(a.value, b.value);
   assert.notEqual(a.identityId, b.identityId);
+});
+
+
+test('回复概率按区间生效', () => {
+  assert.equal(getReplyChance(card, 0), 0.01);
+  assert.equal(getReplyChance(card, 1), 0.05);
+  assert.equal(getReplyChance(card, 4), 0.05);
+  assert.equal(getReplyChance(card, 5), 0.05);
+  assert.equal(getReplyChance(card, 7), 0.15);
+  assert.equal(getReplyChance(card, 9), 0.25);
+  assert.equal(getReplyChance(card, 10), 0.3);
+  assert.equal(getReplyChance(card, 19), 0.3);
+  assert.equal(getReplyChance(card, 20), 1);
+});
+
+test('0 好感仍保留 1% 破冰，20 以上必回', () => {
+  const zero = withValue(createAffectionState(card, { qq: '10001', now: T0 }), 0);
+  const normal = withValue(createAffectionState(card, { qq: '10001', now: T0 }), 20);
+  assert.equal(shouldReply(card, zero, { random: () => 0.005 }), true);
+  assert.equal(shouldReply(card, zero, { random: () => 0.02 }), false);
+  assert.equal(shouldReply(card, normal, { random: () => 0.99 }), true);
+});
+
+test('主动间隔按好感区间取', () => {
+  assert.equal(getProactiveInterval(card, 39), null);
+  assert.deepEqual(getProactiveInterval(card, 40), { minMinutes: 1440, maxMinutes: 1800 });
+  assert.deepEqual(getProactiveInterval(card, 50), { minMinutes: 960, maxMinutes: 1200 });
+  assert.deepEqual(getProactiveInterval(card, 60), { minMinutes: 600, maxMinutes: 840 });
+  assert.deepEqual(getProactiveInterval(card, 70), { minMinutes: 360, maxMinutes: 540 });
+  assert.deepEqual(getProactiveInterval(card, 80), { minMinutes: 240, maxMinutes: 360 });
+  assert.deepEqual(getProactiveInterval(card, 90), { minMinutes: 180, maxMinutes: 240 });
+  assert.deepEqual(getProactiveInterval(card, 95), { minMinutes: 120, maxMinutes: 180 });
+});
+
+test('主动消息限制：低于40、用户刚说话、上条未回、深夜', () => {
+  const at = (value) => withValue(createAffectionState(card, { qq: '10001', now: T0 }), value);
+  const dayNoon = new Date('2026-11-06T04:00:00.000Z'); // 上海 12:00
+
+  assert.equal(getProactivePlan(card, at(39), { now: dayNoon }).reason, 'below-threshold');
+  assert.equal(
+    getProactivePlan(card, at(40), { now: dayNoon, lastUserMessageAt: new Date(dayNoon.getTime() - 10 * 60000) }).reason,
+    'user-active'
+  );
+  assert.equal(
+    getProactivePlan(card, at(40), {
+      now: dayNoon,
+      lastProactiveAt: new Date(dayNoon.getTime() - 25 * 3600000),
+      lastProactiveAnswered: false
+    }).reason,
+    'previous-unanswered'
+  );
+  assert.equal(
+    getProactivePlan(card, at(40), { now: new Date('2026-11-06T22:00:00.000Z') }).reason,
+    'quiet-hours'
+  );
+
+  const plan = getProactivePlan(card, at(40), {
+    now: dayNoon,
+    lastUserMessageAt: new Date(dayNoon.getTime() - 60 * 60000),
+    random: () => 0
+  });
+  assert.equal(plan.eligible, true);
+  assert.equal(plan.nextAt, new Date(dayNoon.getTime() + 1440 * 60000).toISOString());
 });

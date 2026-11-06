@@ -6,6 +6,8 @@ import {
   applyEvent,
   canUse,
   createAffectionState,
+  getProactiveInterval,
+  getReplyChance,
   getStage,
   getUnlocks,
   resetAffectionState,
@@ -127,7 +129,9 @@ export class RoleCardStore {
         sticker: canUse(card, state, 'sticker'),
         voice: canUse(card, state, 'voice'),
         photo: canUse(card, state, 'photo')
-      }
+      },
+      replyChance: getReplyChance(card, state.value),
+      proactiveInterval: getProactiveInterval(card, state.value)
     };
   }
 

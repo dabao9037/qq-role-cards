@@ -25,8 +25,8 @@ test('A/B 两个 QQ 的存档互不影响', () => {
   store.applyEvent('shenyouchu', '10001', 'selfDisclosure', { now: T0 });
   const a = store.loadState('shenyouchu', '10001', { now: T0 });
   const b = store.loadState('shenyouchu', '10002', { now: T0 });
-  assert.equal(a.value, 2);
-  assert.equal(b.value, 0);
+  assert.equal(a.value, 22);
+  assert.equal(b.value, 20);
 });
 
 test('身份线共用同一份好感度', () => {
@@ -36,7 +36,7 @@ test('身份线共用同一份好感度', () => {
     now: T0,
     identityId: 'chenhansheng'
   });
-  assert.equal(canon.value, 2);
+  assert.equal(canon.value, 22);
 });
 
 test('没有修改数值的方法', () => {
@@ -55,11 +55,11 @@ test('重置只清当前 QQ，并删掉运行时缓存', () => {
   fs.writeFileSync(path.join(runtime, 'photo.jpg'), 'runtime');
 
   const reset = store.reset('shenyouchu', '10001', { now: T0 });
-  assert.equal(reset.value, 0);
+  assert.equal(reset.value, 20);
   assert.equal(fs.existsSync(store.statePath('shenyouchu', '10001')), false);
   assert.equal(fs.existsSync(runtime), false);
-  assert.equal(store.loadState('shenyouchu', '10001', { now: T0 }).value, 0);
-  assert.equal(store.loadState('shenyouchu', '10002', { now: T0 }).value, 2);
+  assert.equal(store.loadState('shenyouchu', '10001', { now: T0 }).value, 20);
+  assert.equal(store.loadState('shenyouchu', '10002', { now: T0 }).value, 22);
   assert.ok(dataRoot);
 });
 

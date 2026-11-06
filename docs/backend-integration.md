@@ -63,7 +63,27 @@ if (!allowed) throw new Error('好感度不足');
 
 角色卡模式不要再把全局的主动间隔、表情概率注入成可调配置；这些读 `card.json`。
 
-## 6. 互动更新
+## 6. 回复概率
+
+每条用户消息进来，先查回复概率：
+
+```js
+const chance = getReplyChance(card, state.value);
+if (Math.random() >= chance) {
+  // 不回复，但仍然记录用户来过，用于“用户刚说话”判断
+  return;
+}
+```
+
+- 0 好感：1%
+- 1–4：5%
+- 5–9：5%→25% 线性
+- 10–19：30%
+- 20 以上：100%
+
+被概率挡掉时不要报错，也不要给用户提示。
+
+## 7. 互动更新
 
 每轮有效对话后，由 AI 给出事件类型（`chat` / `selfDisclosure` / `help` / `sharedEvent` / `conflict` / `boundaryViolation`），桥接调用：
 
@@ -73,7 +93,7 @@ store.applyEvent(cardId, qq, eventType);
 
 引擎自己处理单次截断、单日上限、衰减字段。不提供“设置好感”的 API。
 
-## 7. 后台 20 分钟静默推进
+## 8. 后台 20 分钟静默推进
 
 每个 `(cardId, qq)` 一条任务：
 
@@ -84,7 +104,34 @@ store.applyEvent(cardId, qq, eventType);
 - 每轮先 `store.applyDecay(cardId, qq)`，再跑剧情推进
 - 任务之间互不串线
 
-## 8. 重置
+## 9. 主动消息
+
+注意：20 分钟后台推进是静默的；主动消息是另一条调度，按好感区间取间隔。
+
+```js
+const plan = getProactivePlan(card, state, {
+  now,
+  lastUserMessageAt,
+  lastProactiveAt,
+  lastProactiveAnswered
+});
+```
+
+- 低于 40：不发。
+- 40–49：24–30 小时
+- 50–59：16–20 小时
+- 60–69：10–14 小时
+- 70–79：6–9 小时
+- 80–89：4–6 小时
+- 90–94：3–4 小时
+- 95–100：2–3 小时
+- 用户 30 分钟内说过话：不发
+- 上一条主动没回：不发
+- 00:00–07:00：不发
+
+发出后记录 `lastProactiveAt`；用户回复后记为已回；没回就保持未回，不叠下一条。
+
+## 10. 重置
 
 后台唯一写操作：
 
@@ -92,9 +139,9 @@ store.applyEvent(cardId, qq, eventType);
 store.reset(cardId, qq);
 ```
 
-删除该 QQ 的存档和运行时缓存；卡本体、其他 QQ、其他卡都不动。重置后回到 `card.json` 的初始状态。
+删除该 QQ 的存档和运行时缓存；卡本体、其他 QQ、其他卡都不动。重置后回到 `card.json` 的初始状态：沈幼楚好感 20。
 
-## 9. 还没接的
+## 11. 还没接的
 
 - 桥接里的 active card 绑定与切换
 - 工具门禁的实际调用

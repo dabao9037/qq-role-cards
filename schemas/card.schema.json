@@ -16,44 +16,112 @@
   ],
   "additionalProperties": true,
   "properties": {
-    "schemaVersion": { "const": 1 },
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{1,40}$" },
-    "name": { "type": "string", "minLength": 1, "maxLength": 40 },
-    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
-    "description": { "type": "string" },
-    "mode": { "enum": ["card"] },
-    "persona": { "type": "string" },
-    "behavior": { "type": "string" },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{1,40}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "card"
+      ]
+    },
+    "persona": {
+      "type": "string"
+    },
+    "behavior": {
+      "type": "string"
+    },
     "identityBranches": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "label", "locked"],
+        "required": [
+          "id",
+          "label",
+          "locked"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "label": { "type": "string" },
-          "default": { "type": "boolean" },
-          "locked": { "type": "boolean" },
-          "aliases": { "type": "array", "items": { "type": "string" } },
-          "personaMode": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "default": {
+            "type": "boolean"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "personaMode": {
+            "type": "string"
+          }
         }
       }
     },
     "affection": {
       "type": "object",
-      "required": ["initial", "max", "manualEdit", "thresholds", "stages", "gain", "decay"],
+      "required": [
+        "initial",
+        "max",
+        "manualEdit",
+        "thresholds",
+        "stages",
+        "gain",
+        "decay",
+        "responseChance"
+      ],
       "properties": {
-        "initial": { "type": "number", "minimum": 0 },
-        "max": { "type": "number", "exclusiveMinimum": 0 },
-        "manualEdit": { "const": false },
+        "initial": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "manualEdit": {
+          "const": false
+        },
         "thresholds": {
           "type": "object",
-          "required": ["sticker", "voice", "photo"],
+          "required": [
+            "sticker",
+            "voice",
+            "photo"
+          ],
           "properties": {
-            "sticker": { "type": "number" },
-            "voice": { "type": "number" },
-            "photo": { "type": "number" }
+            "sticker": {
+              "type": "number"
+            },
+            "voice": {
+              "type": "number"
+            },
+            "photo": {
+              "type": "number"
+            }
           }
         },
         "stages": {
@@ -61,77 +129,327 @@
           "minItems": 2,
           "items": {
             "type": "object",
-            "required": ["id", "label", "min", "max", "unlocks"],
+            "required": [
+              "id",
+              "label",
+              "min",
+              "max",
+              "unlocks"
+            ],
             "properties": {
-              "id": { "type": "string" },
-              "label": { "type": "string" },
-              "min": { "type": "number" },
-              "max": { "type": "number" },
-              "unlocks": { "type": "array", "items": { "enum": ["sticker", "voice", "photo"] } }
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "unlocks": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "sticker",
+                    "voice",
+                    "photo"
+                  ]
+                }
+              }
             }
           }
         },
         "gain": {
           "type": "object",
-          "required": ["chat", "selfDisclosure", "help", "sharedEvent", "conflict", "boundaryViolation", "eventMin", "eventMax", "dailyGainCap"],
+          "required": [
+            "chat",
+            "selfDisclosure",
+            "help",
+            "sharedEvent",
+            "conflict",
+            "boundaryViolation",
+            "eventMin",
+            "eventMax",
+            "dailyGainCap"
+          ],
           "properties": {
-            "chat": { "type": "number" },
-            "selfDisclosure": { "type": "number" },
-            "help": { "type": "number" },
-            "sharedEvent": { "type": "number" },
-            "conflict": { "type": "number" },
-            "boundaryViolation": { "type": "number" },
-            "eventMin": { "type": "number" },
-            "eventMax": { "type": "number" },
-            "dailyGainCap": { "type": "number", "minimum": 0 }
+            "chat": {
+              "type": "number"
+            },
+            "selfDisclosure": {
+              "type": "number"
+            },
+            "help": {
+              "type": "number"
+            },
+            "sharedEvent": {
+              "type": "number"
+            },
+            "conflict": {
+              "type": "number"
+            },
+            "boundaryViolation": {
+              "type": "number"
+            },
+            "eventMin": {
+              "type": "number"
+            },
+            "eventMax": {
+              "type": "number"
+            },
+            "dailyGainCap": {
+              "type": "number",
+              "minimum": 0
+            }
           }
         },
         "decay": {
           "type": "object",
-          "required": ["afterDays", "perDay", "floor"],
+          "required": [
+            "afterDays",
+            "perDay",
+            "floor"
+          ],
           "properties": {
-            "afterDays": { "type": "number", "minimum": 0 },
-            "perDay": { "type": "number", "minimum": 0 },
-            "floor": { "type": "number", "minimum": 0 }
+            "afterDays": {
+              "type": "number",
+              "minimum": 0
+            },
+            "perDay": {
+              "type": "number",
+              "minimum": 0
+            },
+            "floor": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "responseChance": {
+          "type": "object",
+          "required": [
+            "ranges"
+          ],
+          "properties": {
+            "ranges": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "min",
+                  "max"
+                ],
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  },
+                  "chance": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "start": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "end": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": [
+                      "chance"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "start",
+                      "end"
+                    ]
+                  }
+                ]
+              }
+            }
           }
         }
       }
     },
     "pacing": {
       "type": "object",
-      "required": ["proactiveMinMinutes", "proactiveMaxMinutes", "stickerChance", "voiceChance", "photoChance"],
+      "required": [
+        "proactive",
+        "stickerChance",
+        "voiceChance",
+        "photoChance"
+      ],
       "properties": {
-        "proactiveMinMinutes": { "type": "number", "minimum": 1 },
-        "proactiveMaxMinutes": { "type": "number", "minimum": 1 },
-        "stickerChance": { "type": "number", "minimum": 0, "maximum": 1 },
-        "voiceChance": { "type": "number", "minimum": 0, "maximum": 1 },
-        "photoChance": { "type": "number", "minimum": 0, "maximum": 1 }
+        "proactive": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "minAffection",
+            "skipIfUserActiveWithinMinutes",
+            "skipIfPreviousUnanswered",
+            "quietHours",
+            "intervals"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "minAffection": {
+              "type": "number",
+              "minimum": 0
+            },
+            "skipIfUserActiveWithinMinutes": {
+              "type": "number",
+              "minimum": 0
+            },
+            "skipIfPreviousUnanswered": {
+              "type": "boolean"
+            },
+            "quietHours": {
+              "type": "object",
+              "required": [
+                "start",
+                "end"
+              ],
+              "properties": {
+                "start": {
+                  "type": "string",
+                  "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                },
+                "end": {
+                  "type": "string",
+                  "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                },
+                "timeZone": {
+                  "type": "string"
+                }
+              }
+            },
+            "intervals": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "min",
+                  "max",
+                  "minMinutes",
+                  "maxMinutes"
+                ],
+                "properties": {
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  },
+                  "minMinutes": {
+                    "type": "number",
+                    "minimum": 1
+                  },
+                  "maxMinutes": {
+                    "type": "number",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "stickerChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "voiceChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "photoChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
       }
     },
     "background": {
       "type": "object",
-      "required": ["enabled", "intervalMinutes", "silent", "tokenLimit", "affectionChange"],
+      "required": [
+        "enabled",
+        "intervalMinutes",
+        "silent",
+        "tokenLimit",
+        "affectionChange"
+      ],
       "properties": {
-        "enabled": { "type": "boolean" },
-        "intervalMinutes": { "type": "number", "minimum": 1 },
-        "silent": { "const": true },
-        "tokenLimit": { "type": ["number", "null"] },
-        "affectionChange": { "const": 0 }
+        "enabled": {
+          "type": "boolean"
+        },
+        "intervalMinutes": {
+          "type": "number",
+          "minimum": 1
+        },
+        "silent": {
+          "const": true
+        },
+        "tokenLimit": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "affectionChange": {
+          "const": 0
+        }
       }
     },
     "assets": {
       "type": "object",
       "properties": {
-        "portrait": { "type": "string" },
-        "gallery": { "type": "array", "items": { "type": "string" } }
+        "portrait": {
+          "type": "string"
+        },
+        "gallery": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "voice": {
       "type": "object",
       "properties": {
-        "enabled": { "type": "boolean" },
-        "profile": { "type": ["string", "null"] },
-        "samples": { "type": "array", "items": { "type": "string" } }
+        "enabled": {
+          "type": "boolean"
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   }

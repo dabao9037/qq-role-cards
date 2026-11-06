@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "shenyouchu",
   "name": "沈幼楚",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "建邺财经学院人文系大一学生，川渝大凉山来的普通女大学生。",
   "mode": "card",
   "persona": "persona.md",
@@ -26,7 +26,7 @@
     }
   ],
   "affection": {
-    "initial": 0,
+    "initial": 20,
     "max": 100,
     "manualEdit": false,
     "thresholds": {
@@ -86,17 +86,100 @@
       "boundaryViolation": -10,
       "eventMin": -10,
       "eventMax": 5,
-      "dailyGainCap": 8
+      "dailyGainCap": 5
     },
     "decay": {
       "afterDays": 3,
       "perDay": 1,
       "floor": 0
+    },
+    "responseChance": {
+      "ranges": [
+        {
+          "min": 0,
+          "max": 0,
+          "chance": 0.01
+        },
+        {
+          "min": 1,
+          "max": 4,
+          "chance": 0.05
+        },
+        {
+          "min": 5,
+          "max": 9,
+          "start": 0.05,
+          "end": 0.25
+        },
+        {
+          "min": 10,
+          "max": 19,
+          "chance": 0.3
+        },
+        {
+          "min": 20,
+          "max": 100,
+          "chance": 1.0
+        }
+      ]
     }
   },
   "pacing": {
-    "proactiveMinMinutes": 180,
-    "proactiveMaxMinutes": 480,
+    "proactive": {
+      "enabled": true,
+      "minAffection": 40,
+      "skipIfUserActiveWithinMinutes": 30,
+      "skipIfPreviousUnanswered": true,
+      "quietHours": {
+        "start": "00:00",
+        "end": "07:00",
+        "timeZone": "Asia/Shanghai"
+      },
+      "intervals": [
+        {
+          "min": 40,
+          "max": 49,
+          "minMinutes": 1440,
+          "maxMinutes": 1800
+        },
+        {
+          "min": 50,
+          "max": 59,
+          "minMinutes": 960,
+          "maxMinutes": 1200
+        },
+        {
+          "min": 60,
+          "max": 69,
+          "minMinutes": 600,
+          "maxMinutes": 840
+        },
+        {
+          "min": 70,
+          "max": 79,
+          "minMinutes": 360,
+          "maxMinutes": 540
+        },
+        {
+          "min": 80,
+          "max": 89,
+          "minMinutes": 240,
+          "maxMinutes": 360
+        },
+        {
+          "min": 90,
+          "max": 94,
+          "minMinutes": 180,
+          "maxMinutes": 240
+        },
+        {
+          "min": 95,
+          "max": 100,
+          "minMinutes": 120,
+          "maxMinutes": 180
+        }
+      ]
+    },
     "stickerChance": 0.25,
     "voiceChance": 0.1,
     "photoChance": 0.15
