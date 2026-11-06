@@ -469,6 +469,50 @@
           "items": {
             "type": "string"
           }
+        },
+        "openings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "avoid": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "lorebook": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "content"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "content": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "number"
+          },
+          "constant": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          }
         }
       }
     }
