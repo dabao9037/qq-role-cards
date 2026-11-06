@@ -221,10 +221,26 @@ export function getProactivePlan(
   if (!interval) return { eligible: false, reason: 'no-interval' };
   const span = interval.maxMinutes - interval.minMinutes;
   const minutes = interval.minMinutes + Math.floor(random() * (span + 1));
+  const nowMs = new Date(now).getTime();
+  // 间隔基线：上次主动发出 → 上次用户说话 → 无（首次立即可排）。
+  // 用用户说话做首次基线，避免刚解锁 40 就在 30 分钟没说话后立刻冒泡。
+  const lastMs = lastProactiveAt
+    ? new Date(lastProactiveAt).getTime()
+    : (lastUserMessageAt ? new Date(lastUserMessageAt).getTime() : 0);
+  // 主动间隔从基线起算；未到最早间隔一律不eligible，
+  // 否则调度器每分钟扫一次会变成每分钟发一条。
+  if (lastMs && Number.isFinite(lastMs) && nowMs < lastMs + minutes * 60000) {
+    return {
+      eligible: false,
+      reason: 'not-due',
+      interval,
+      nextAt: new Date(lastMs + minutes * 60000).toISOString()
+    };
+  }
   return {
     eligible: true,
     interval,
-    nextAt: new Date(new Date(now).getTime() + minutes * 60000).toISOString()
+    nextAt: new Date(nowMs + minutes * 60000).toISOString()
   };
 }
 /**

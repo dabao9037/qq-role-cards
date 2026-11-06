@@ -176,9 +176,17 @@ test('主动消息限制：低于40、用户刚说话、上条未回、深夜', 
     'quiet-hours'
   );
 
+  // 首次主动也按“上次用户说话”起算 24~30h，不是 1 小时没说话就冒泡。
+  assert.equal(
+    getProactivePlan(card, at(40), {
+      now: dayNoon,
+      lastUserMessageAt: new Date(dayNoon.getTime() - 60 * 60000)
+    }).reason,
+    'not-due'
+  );
   const plan = getProactivePlan(card, at(40), {
     now: dayNoon,
-    lastUserMessageAt: new Date(dayNoon.getTime() - 60 * 60000),
+    lastUserMessageAt: new Date(dayNoon.getTime() - 25 * 3600000),
     random: () => 0
   });
   assert.equal(plan.eligible, true);
