@@ -451,6 +451,26 @@
           }
         }
       }
+    },
+    "dialogue": {
+      "type": "object",
+      "properties": {
+        "examples": {
+          "type": "string"
+        },
+        "stageHints": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "openingHints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

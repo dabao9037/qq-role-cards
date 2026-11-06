@@ -11,6 +11,7 @@ cards/<id>/
   card.json        # 卡的身份、好感度、节奏、身份分支、素材索引
   persona.md       # 人设正文：她是谁、怎么说话、边界
   behavior.md      # 这张卡自己的行为预设（不替代全局工具协议）
+  examples.md      # 对话样例：只学语气/节奏，不照抄
   assets/          # 角色形象图；用户后续生成
   voice/           # 语音素材/音色引用；先留空
 ```
@@ -64,6 +65,25 @@ cards/<id>/
 
 详细规则见 [docs/affection.md](docs/affection.md)。
 
+## 独立记忆
+
+角色卡模式有自己的一条记忆，不读普通人格的记忆，也不把普通会话的历史带进来：
+
+- 每条「卡 × QQ」一份：`state/role-cards/<cardId>/<qq>/memory.json`。
+- 记三类东西：对方明确说过的长期事实、你们之间发生过的片段、最近几句对话。
+- 每次注入只带最近少量事实和对话，不把整份聊天记录倒给模型；用不用、提不提，按当前话题自然决定。
+- 后台每 20 分钟的生活日记也会作为「她那边的日子」进入记忆，不和聊天事实混在一起。
+- 重置这条线会删掉 `memory.json` 和运行时缓存，其他 QQ、卡本体不动。
+- 面板「角色卡模式」里可以只读查看每条线记得什么。
+
+## 对话样例与开场
+
+`card.json` 的 `dialogue` 可以带：
+
+- `stageHints`：每个关系阶段该怎么说话，按人物自己的节奏，不按固定台词。
+- `openingHints`：第一次接话、隔几天回来、只收到「在吗」时怎么开。
+- `examples`：`examples.md`，给模型学语气和停顿；样例不是固定回复。
+
 ## 后台推进
 
 - 每 20 分钟静默推进一次，不主动发消息。
@@ -84,9 +104,10 @@ cards/<id>/
 
 1. 复制 `cards/shenyouchu/` 为 `cards/<新id>/`。
 2. 改 `card.json` 的 `id`、`name`、`version`、阈值、节奏。
-3. 写 `persona.md` 和 `behavior.md`。
-4. 把形象图放进 `assets/`，语音素材放进 `voice/`。
-5. 跑：
+3. 写 `persona.md`、`behavior.md`、`examples.md`。
+4. 在 `card.json` 里补 `dialogue.stageHints` / `openingHints` / `examples`。
+5. 把形象图放进 `assets/`，语音素材放进 `voice/`。
+6. 跑：
 
 ```bash
 npm run validate
