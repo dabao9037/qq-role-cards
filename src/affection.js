@@ -11,6 +11,16 @@ const EVENT_KEYS = Object.freeze({
 
 const CAPABILITIES = Object.freeze(['sticker', 'voice', 'photo']);
 
+// 热情程度是亲密度的表现层，不是新的数值状态：
+// 同一份好感只决定“这一轮话多少、主不主动”，不写入提示词，也不让用户看见。
+const DEFAULT_WARMTH = Object.freeze([
+  { id: 'cold', label: '生分', min: 0, max: 19, verbosity: 1, allowQuestion: false, hint: '只回必要的字，句子短；不主动展开，也不追问对方的事。' },
+  { id: 'reserved', label: '客气', min: 20, max: 39, verbosity: 2, allowQuestion: false, hint: '会接话，但话不多；说自己的事只说半句，不主动追问。' },
+  { id: 'normal', label: '平常', min: 40, max: 59, verbosity: 2, allowQuestion: true, hint: '正常接话，可以问一个具体问题；不用刻意热络。' },
+  { id: 'warm', label: '亲近', min: 60, max: 79, verbosity: 3, allowQuestion: true, hint: '愿意多说两句，主动接对方的话头，偶尔关心一句；不黏人。' },
+  { id: 'close', label: '熟络', min: 80, max: 100, verbosity: 3, allowQuestion: true, hint: '话明显多起来，会主动分享自己的事、接住对方的情绪；仍然有分寸，不刷屏。' }
+]);
+
 function assertCard(card) {
   if (!card?.id || !card.affection?.thresholds || !Array.isArray(card.affection?.stages)) {
     throw new Error('角色卡缺少 id / affection.thresholds / affection.stages');
@@ -73,6 +83,41 @@ export function getUnlocks(card, value) {
     for (const unlock of stage.unlocks ?? []) unlocks.add(unlock);
   }
   return CAPABILITIES.filter((capability) => unlocks.has(capability));
+}
+
+function warmthBands(card) {
+  const configured = Array.isArray(card?.affection?.warmth)
+    ? card.affection.warmth
+      .filter((item) => item && typeof item === 'object')
+      .map((item) => ({
+        id: String(item.id ?? '').trim(),
+        label: String(item.label ?? '').trim(),
+        min: Number(item.min),
+        max: Number(item.max),
+        verbosity: Number(item.verbosity),
+        allowQuestion: item.allowQuestion !== false,
+        hint: String(item.hint ?? '').trim().slice(0, 300)
+      }))
+      .filter((item) => item.id && Number.isFinite(item.min) && Number.isFinite(item.max))
+    : [];
+  const source = configured.length ? configured : DEFAULT_WARMTH;
+  return [...source].sort((a, b) => a.min - b.min);
+}
+
+/**
+ * 亲密度对应的“热情程度”。只给表达层用，不返回数值，也不写进用户可见状态。
+ */
+export function getWarmth(card, value) {
+  const bands = warmthBands(card);
+  const score = Number.isFinite(Number(value)) ? Number(value) : Number(card?.affection?.initial ?? 20);
+  const band = bands.find((item) => score <= item.max) ?? bands.at(-1) ?? DEFAULT_WARMTH[2];
+  return {
+    id: band.id || 'normal',
+    label: band.label || '平常',
+    hint: band.hint || '',
+    verbosity: clamp(Math.round(Number(band.verbosity) || 2), 1, 3),
+    allowQuestion: band.allowQuestion !== false
+  };
 }
 
 export function canUse(card, state, capability) {

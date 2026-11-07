@@ -13,6 +13,7 @@ import {
   getReplyChance,
   getStage,
   getUnlocks,
+  getWarmth,
   resetAffectionState,
   shouldReply,
   toPromptSummary
@@ -68,6 +69,19 @@ test('阶段与解锁按阈值生效', () => {
   assert.deepEqual(getUnlocks(card, 50), ['sticker']);
   assert.deepEqual(getUnlocks(card, 75), ['sticker', 'voice']);
   assert.deepEqual(getUnlocks(card, 95), ['sticker', 'voice', 'photo']);
+});
+
+test('热情程度随亲密度变化，只给表达层且不暴露数值', () => {
+  assert.deepEqual(getWarmth(card, 0), {
+    id: 'cold', label: '生分', hint: '只回必要的字，句子短；不主动展开，也不追问对方的事。', verbosity: 1, allowQuestion: false
+  });
+  assert.equal(getWarmth(card, 20).id, 'reserved');
+  assert.equal(getWarmth(card, 45).id, 'normal');
+  assert.equal(getWarmth(card, 70).id, 'warm');
+  assert.equal(getWarmth(card, 95).id, 'close');
+  assert.equal(getWarmth(card, 95).allowQuestion, true);
+  assert.equal(getWarmth(card, 95).verbosity, 3);
+  assert.equal(Object.keys(getWarmth(card, 95)).includes('value'), false);
 });
 
 test('长期不聊按天衰减，且 20 分钟重复调用不重复扣', () => {

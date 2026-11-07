@@ -163,6 +163,27 @@ function checkCard(cardDir) {
     if (!rel || !fs.existsSync(path.join(cardDir, rel))) fail(cardId, `缺少 ${key} 文件：${rel}`);
   }
 
+  const humanStyleRel = card.dialogue?.humanStyle;
+  if (humanStyleRel) {
+    const humanStylePath = path.join(cardDir, humanStyleRel);
+    if (!fs.existsSync(humanStylePath)) {
+      fail(cardId, `缺少 dialogue.humanStyle 文件：${humanStyleRel}`);
+    } else {
+      try {
+        const bank = JSON.parse(fs.readFileSync(humanStylePath, 'utf8'));
+        const entries = Array.isArray(bank) ? bank : bank?.entries;
+        if (!Array.isArray(entries) || !entries.length) fail(cardId, 'human-style 必须有 entries');
+        for (const entry of entries) {
+          if (!entry?.id) fail(cardId, 'human-style 条目的 id 不能为空');
+          if (!Array.isArray(entry?.keys) || !entry.keys.length) fail(cardId, `human-style ${entry?.id} 缺少 keys`);
+          if (!Array.isArray(entry?.replies) || !entry.replies.length) fail(cardId, `human-style ${entry?.id} 缺少 replies`);
+        }
+      } catch (error) {
+        fail(cardId, `human-style.json 不是合法 JSON：${error.message}`);
+      }
+    }
+  }
+
   const branches = card.identityBranches;
   if (!Array.isArray(branches) || !branches.length) fail(cardId, 'identityBranches 不能为空');
   else {
@@ -195,6 +216,22 @@ function checkCard(cardDir) {
       fail(cardId, 'affection.gain.eventMin 不能大于 eventMax');
     }
     if (isFiniteNumber(g.dailyGainCap) && g.dailyGainCap < 0) fail(cardId, 'dailyGainCap 不能为负');
+    const ins = a.insult;
+    if (ins !== undefined) {
+      if (!ins || typeof ins !== 'object' || Array.isArray(ins)) {
+        fail(cardId, 'affection.insult 必须是对象');
+      } else {
+        if (!isFiniteNumber(ins.penalty) || ins.penalty >= 0) fail(cardId, 'affection.insult.penalty 必须是负数');
+        if (isFiniteNumber(g.eventMin) && isFiniteNumber(ins.penalty) && ins.penalty < g.eventMin) fail(cardId, 'affection.insult.penalty 不能低于 eventMin');
+        const contextMin = ins.contextMin ?? ins.teaseMin;
+        if (!isFiniteNumber(contextMin) || contextMin < 0 || contextMin > a.max) fail(cardId, 'affection.insult.contextMin 必须在 0..max');
+        for (const key of ['severe', 'mild']) {
+          if (!Array.isArray(ins[key]) || !ins[key].length || ins[key].some((item) => typeof item !== 'string' || !item.trim())) {
+            fail(cardId, `affection.insult.${key} 必须是非空字符串数组`);
+          }
+        }
+      }
+    }
     const d = a.decay ?? {};
     for (const key of ['afterDays', 'perDay', 'floor']) {
       if (!isFiniteNumber(d[key]) || d[key] < 0) fail(cardId, `affection.decay.${key} 必须是非负数字`);
